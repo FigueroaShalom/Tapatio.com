@@ -43,19 +43,20 @@ elseif ($accion === 'editar_articulo') {
 }
 
 // --- 3. CREAR ---
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'crear_articulo') {
     $titulo    = trim($_POST['titulo']    ?? '');
     $categoria = trim($_POST['categoria'] ?? '');
     $imagen    = trim($_POST['imagen']    ?? '');
     $contenido = trim($_POST['contenido'] ?? '');
+    $estado    = $_POST['estado'] ?? 'borrador'; // 'borrador' o 'pendiente'
 
     if (empty($titulo) || empty($contenido)) {
         echo 'error: título y contenido son obligatorios';
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO publicaciones (titulo, categoria, imagen, contenido, id_autor, fecha_creacion) VALUES (?, ?, ?, ?, ?, NOW())");
-    $stmt->bind_param("ssssi", $titulo, $categoria, $imagen, $contenido, $id_usuario);
+    $stmt = $conn->prepare("INSERT INTO publicaciones (titulo, categoria, imagen, contenido, id_autor, estado, fecha_creacion) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+    $stmt->bind_param("ssssis", $titulo, $categoria, $imagen, $contenido, $id_usuario, $estado);
 
     if ($stmt->execute()) {
         echo 'success';

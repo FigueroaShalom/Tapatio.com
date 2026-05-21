@@ -1,9 +1,9 @@
 <?php
+session_start(); 
 require_once __DIR__ . '/../database/Conexion_base.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
 
 // 🔒 Solo admin
-if (!isset($_SESSION['id']) || $_SESSION['rol'] != "administrador") {
+if (!isset($_SESSION['user_id']) || $_SESSION['rol'] != "administrador") {
     echo "<div class='alert alert-danger'>Acceso no autorizado</div>";
     exit();
 }

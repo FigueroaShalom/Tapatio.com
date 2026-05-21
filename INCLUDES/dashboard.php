@@ -6,6 +6,7 @@ if(empty($_SESSION['logged_in'])){
     echo "<script>window.location.href='index.php?section=login';</script>";
     exit();
 }
+
 $id_user = $_SESSION['user_id'];
 
 require_once __DIR__ . '/../database/Conexion_base.php';
@@ -24,6 +25,7 @@ $foto  = $user_data['foto'] ?: 'https://cdn-icons-png.flaticon.com/512/149/14907
 $_SESSION['rol']   = $rol;
 $_SESSION['user']  = $user;
 $_SESSION['email'] = $email;
+$_SESSION['id'] = $id_user;
 ?>
 
 <style>
@@ -140,6 +142,13 @@ $_SESSION['email'] = $email;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border) !important;
 }
+.btn-revision {
+    background: #ff9800 !important;
+    color: white !important;
+}
+.btn-revision:hover {
+    background: #e68900 !important;
+}
 
 </style>
 
@@ -163,15 +172,20 @@ $_SESSION['email'] = $email;
 <button onclick="cargar('crear_contenido')">Crear Contenido</button>
 <button onclick="cargar('mis_Publicaciones')">Mis Publicaciones</button>
 <button onclick="cargar('mis_borradores')">Mis Borradores</button>
+<button onclick="cargar('publicaciones_Revision')" class="btn-revision">En revisión</button>
+<button class="admin" onclick="cargar('admin_configuracion')">Configuración general</button>
 <button class="admin" onclick="cargar('aprobar_fotos')">Aprobar Fotos</button>
-<button class="admin" onclick="cargar('Perfil(dashboard)/administrar_Usuarios')">Administrar usuarios</button>
 <button class="admin" onclick="cargar('Perfil(dashboard)/crear_Usuarios')">Crear Usuario</button>
-
+<button class="admin" onclick="cargar('Perfil(dashboard)/administrar_Usuarios')">Administrar usuarios</button>
+<button class="admin" onclick="cargar('admin_categorias')">Gestionar Categorías</button>    
+<button class="admin" onclick="cargar('admin_contenidos')">Administrar Contenidos</button>
+<button class="admin" onclick="cargar('admin_comentarios')">Moderar comentarios</button>
 <?php } elseif($rol == "editor"){ ?>
 <button onclick="cargar('crear_contenido')">Crear Contenido</button>
 <button onclick="cargar('mis_Publicaciones')">Mis Publicaciones</button>
 <button onclick="cargar('mis_borradores')">Mis Borradores</button>
-<button onclick="cargar('publicaciones_Revision')">En revisión</button>
+<button onclick="cargar('publicaciones_Revision')" class="btn-revision">En revisión</button>
+<button class="admin" onclick="cargar('aprobar_fotos')">Aprobar Fotos</button>
 
 <?php } elseif($rol == "autor"){ ?>
 <button onclick="cargar('crear_contenido')">Crear Contenido</button>
@@ -191,11 +205,26 @@ $_SESSION['email'] = $email;
 <div class="hy-content">
 <div class="hy-content-box" id="contenido">
     <!-- Se carga configuración por defecto -->
-    <script>document.addEventListener('DOMContentLoaded', () => cargar('configuracion'));</script>
+    <?php
+$modulo_inicial = 'configuracion';
+$parametros = '';
+
+if (isset($_GET['modulo'])) {
+    $modulo_inicial = $_GET['modulo'];
+    if (isset($_GET['editar_borrador'])) {
+        $parametros = '?editar_borrador=' . (int)$_GET['editar_borrador'];
+    }
+}
+?>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    cargar('<?php echo $modulo_inicial . $parametros; ?>');
+});
+</script>  
 </div>
 </div>
 
-</div>
+</div>  
 
 <script>
 // Módulos en includes/ — con soporte para ?params

@@ -22,17 +22,19 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-define('SITE_NAME', 'HYDRON');
-define('SITE_URL', 'http://localhost/HYDRON/'); // Esto podría ir al .env luego
+define('SITE_NAME', 'Life Below');
+$is_local = ($_SERVER['SERVER_NAME'] === 'localhost' || ($_SERVER['SERVER_ADDR'] ?? '') === '127.0.0.1');
+define('SITE_URL', $is_local
+    ? 'http://localhost/Life-Below/'
+    : 'https://life-bel0w.mx/'
+);
 define('UPLOADS_DIR', __DIR__ . '/uploads/');
 define('ADMIN_USER', $env_vars['ADMIN_USER'] ?? 'admin');
 define('ADMIN_PASS', $env_vars['ADMIN_PASS'] ?? 'admin123');
 
 // Google OAuth
-$is_local = ($_SERVER['SERVER_NAME'] === 'localhost' || ($_SERVER['SERVER_ADDR'] ?? '') === '127.0.0.1');
-
-define('GOOGLE_CLIENT_ID',     '229655611571-q5lbjaqmtg7d8i5i24pbrnh8cla44hm7.apps.googleusercontent.com');
-define('GOOGLE_CLIENT_SECRET', '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');
+define('GOOGLE_CLIENT_ID',     $env_vars['GOOGLE_CLIENT_ID'] ?? getenv('GOOGLE_CLIENT_ID') ?? '');
+define('GOOGLE_CLIENT_SECRET', $env_vars['GOOGLE_CLIENT_SECRET'] ?? getenv('GOOGLE_CLIENT_SECRET') ?? '');
 define('GOOGLE_REDIRECT_URI',  $is_local
     ? 'http://localhost/Life-Below/auth/google_callback.php'
     : 'https://life-bel0w.mx/auth/google_callback.php'

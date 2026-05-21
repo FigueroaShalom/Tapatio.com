@@ -1,6 +1,6 @@
 <?php
+session_start();  // ← AGREGAR ESTO
 require_once __DIR__ . '/../database/Conexion_base.php';
-if (session_status() === PHP_SESSION_NONE) session_start();
 
 // 🔒 Solo admin
 if (!isset($_SESSION['id']) || $_SESSION['rol'] != "administrador") {
