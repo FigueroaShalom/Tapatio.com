@@ -6,22 +6,7 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'administrador') {
 }
 require_once __DIR__ . '/../database/Conexion_base.php';
 
-$mensaje = '';
-$error = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    foreach ($_POST as $clave => $valor) {
-        if ($clave === 'accion') continue;
-        $valor = trim($valor);
-        $stmt = $conn->prepare("UPDATE configuracion SET valor = ? WHERE clave = ?");
-        $stmt->bind_param("ss", $valor, $clave);
-        $stmt->execute();
-        $stmt->close();
-    }
-    $mensaje = "Configuración actualizada.";
-}
-
-// Obtener todas las configuraciones
+// Obtener todas las configuraciones directamente de la BD
 $result = $conn->query("SELECT * FROM configuracion");
 $config = [];
 while ($row = $result->fetch_assoc()) {
@@ -31,12 +16,9 @@ while ($row = $result->fetch_assoc()) {
 
 <div class="admin-config">
     <h3 class="fw-bold mb-4">⚙️ Configuración general</h3>
-    
-    <?php if ($mensaje): ?>
-        <div class="alert alert-success"><?php echo htmlspecialchars($mensaje); ?></div>
-    <?php endif; ?>
-    
-    <form method="POST">
+    <div id="mensajeConfig" class="mb-3"></div>
+
+    <form id="formConfiguracion">
         <div class="card">
             <div class="card-body">
                 <?php foreach ($config as $clave => $item): ?>
@@ -59,3 +41,27 @@ while ($row = $result->fetch_assoc()) {
         </div>
     </form>
 </div>
+
+<script>
+document.getElementById('formConfiguracion').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const mensajeDiv = document.getElementById('mensajeConfig');
+    
+    fetch('database/procesar_configuracion.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        mensajeDiv.innerHTML = `<div class="alert alert-${data.ok ? 'success' : 'danger'}">${data.msg}</div>`;
+        if (data.ok) {
+            // Recargar el módulo para mostrar los nuevos valores
+            setTimeout(() => cargar('admin_configuracion'), 1500);
+        }
+    })
+    .catch(err => {
+        mensajeDiv.innerHTML = '<div class="alert alert-danger">Error de conexión</div>';
+    });
+});
+</script>

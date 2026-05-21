@@ -1,18 +1,22 @@
 <?php
 $current_section = $_GET['section'] ?? 'inicio';
+
+require_once __DIR__ . '/database/Conexion_base.php';
+require_once __DIR__ . '/includes/functions.php';
+$config = cargar_configuracion();
 ?>
 <!DOCTYPE html>
 <html lang="es">
     <!-- Particles.js para fondo dinámico -->
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <head>
-    
+            
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo SITE_NAME; ?> - <?php echo ucfirst(str_replace('_', ' ', $current_section)); ?></title>
-    <meta name="description" content="Explora el océano con HYDRON: noticias, artículos, mapas dinámicos y galerías sobre conservación y vida marina.">
-    <meta property="og:title" content="<?php echo SITE_NAME; ?> - <?php echo ucfirst(str_replace('_', ' ', $current_section)); ?>">
-    <meta property="og:description" content="Explora el océano con HYDRON: conservación, mapas y vida marina.">
+    <title><?php echo $config['site_name']; ?> - <?php echo ucfirst(str_replace('_', ' ', $current_section)); ?></title>
+<meta name="description" content="<?php echo $config['site_description']; ?>">
+<meta property="og:title" content="<?php echo $config['site_name']; ?>">
+<meta property="og:description" content="<?php echo $config['site_description']; ?>">
     <meta property="og:image" content="<?php echo SITE_URL; ?>uploads/logo.svg">
     <meta property="og:type" content="website">
     <?php if ($current_section === 'dashboard'): ?>
@@ -121,7 +125,7 @@ $current_section = $_GET['section'] ?? 'inicio';
 <header class="hy-header">
     <div class="hy-nav-inner">
         <a href="index.php?section=inicio" class="hy-logo">
-            <img src="uploads/logooo.jpg" alt="<?php echo SITE_NAME; ?>" class="hy-logo-img stylized-logo">
+            <img src="uploads/logooo.jpg" alt="<?php echo $config['site_name']; ?>" class="hy-logo-img stylized-logo">
         </a>
 
         <nav class="hy-nav">

@@ -6,22 +6,8 @@ if (!isset($_SESSION['rol']) || $_SESSION['rol'] !== 'administrador') {
 }
 require_once __DIR__ . '/../database/Conexion_base.php';
 
-$mensaje = '';
 $tipo = $_GET['tipo'] ?? 'articulos';
-
-// Eliminar contenido
-if (isset($_GET['eliminar']) && isset($_GET['id'])) {
-    $id = (int)$_GET['id'];
-    if ($tipo === 'articulos') {
-        $conn->query("DELETE FROM publicaciones WHERE id = $id");
-        $mensaje = "Artículo eliminado.";
-    } elseif ($tipo === 'videos') {
-        // También eliminar sus categorías
-        $conn->query("DELETE FROM video_categorias WHERE video_id = $id");
-        $conn->query("DELETE FROM videos WHERE id = $id");
-        $mensaje = "Video eliminado.";
-    }
-}
+$mensaje = '';
 
 // Listar artículos
 $articulos = [];
@@ -48,20 +34,17 @@ if ($tipo === 'articulos') {
 
 <div class="admin-contenidos">
     <h3 class="fw-bold mb-4">📄 Supervisar contenidos</h3>
-    
-    <?php if ($mensaje): ?>
-        <div class="alert alert-success"><?php echo htmlspecialchars($mensaje); ?></div>
-    <?php endif; ?>
-    
+    <div id="mensajeContenidos" class="mb-3"></div>
+
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-            <a class="nav-link <?php echo $tipo === 'articulos' ? 'active' : ''; ?>" href="?section=dashboard&modulo=admin_contenidos&tipo=articulos">Artículos</a>
+            <a class="nav-link <?php echo $tipo === 'articulos' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="cambiarTipo('articulos')">Artículos</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?php echo $tipo === 'videos' ? 'active' : ''; ?>" href="?section=dashboard&modulo=admin_contenidos&tipo=videos">Videos</a>
+            <a class="nav-link <?php echo $tipo === 'videos' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="cambiarTipo('videos')">Videos</a>
         </li>
     </ul>
-    
+
     <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead class="table-dark">
@@ -74,10 +57,10 @@ if ($tipo === 'articulos') {
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tablaContenidos">
                 <?php if ($tipo === 'articulos'): ?>
                     <?php foreach ($articulos as $art): ?>
-                    <tr>
+                    <tr id="fila-<?php echo $art['id']; ?>">
                         <td><?php echo $art['id']; ?></td>
                         <td><?php echo htmlspecialchars($art['titulo']); ?></td>
                         <td><?php echo htmlspecialchars($art['autor']); ?></td>
@@ -86,13 +69,13 @@ if ($tipo === 'articulos') {
                         <td>
                             <a href="index.php?section=articulos&post=<?php echo $art['id']; ?>" class="btn btn-sm btn-info" target="_blank">Ver</a>
                             <a href="javascript:void(0)" onclick="cargar('editar_contenido?id=<?php echo $art['id']; ?>')" class="btn btn-sm btn-warning">Editar</a>
-                            <a href="?section=dashboard&modulo=admin_contenidos&tipo=articulos&eliminar=1&id=<?php echo $art['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este artículo?')">Eliminar</a>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarContenido(<?php echo $art['id']; ?>, 'articulos')">Eliminar</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <?php foreach ($videos as $vid): ?>
-                    <tr>
+                    <tr id="fila-<?php echo $vid['id']; ?>">
                         <td><?php echo $vid['id']; ?></td>
                         <td><?php echo htmlspecialchars($vid['titulo']); ?></td>
                         <td><?php echo htmlspecialchars($vid['autor']); ?></td>
@@ -100,8 +83,8 @@ if ($tipo === 'articulos') {
                         <td>-</td>
                         <td>
                             <a href="index.php?section=watch&video=<?php echo $vid['id']; ?>" class="btn btn-sm btn-info" target="_blank">Ver</a>
-                            <a href="crear_contenido.php?editar_vid=<?php echo $vid['id']; ?>" class="btn btn-sm btn-warning">Editar</a>
-                            <a href="?section=dashboard&modulo=admin_contenidos&tipo=videos&eliminar=1&id=<?php echo $vid['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar este video?')">Eliminar</a>
+                            <a href="javascript:void(0)" onclick="cargar('editar_contenido_admin?id=<?php echo $art['id']; ?>')" class="btn btn-sm btn-warning">Editar</a>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarContenido(<?php echo $vid['id']; ?>, 'videos')">Eliminar</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -110,3 +93,38 @@ if ($tipo === 'articulos') {
         </table>
     </div>
 </div>
+
+<script>
+function mostrarMensaje(msg, tipo) {
+    const contenedor = document.getElementById('mensajeContenidos');
+    contenedor.innerHTML = `<div class="alert alert-${tipo === 'success' ? 'success' : 'danger'}">${msg}</div>`;
+    setTimeout(() => contenedor.innerHTML = '', 4000);
+}
+
+function cambiarTipo(tipo) {
+    cargar('admin_contenidos&tipo=' + tipo);
+}
+
+function eliminarContenido(id, tipo) {
+    if (!confirm('¿Eliminar este contenido permanentemente?')) return;
+
+    const formData = new FormData();
+    formData.append('accion', 'eliminar');
+    formData.append('tipo', tipo);
+    formData.append('id', id);
+
+    fetch('database/procesar_contenidos_admin.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        mostrarMensaje(data.msg, data.ok ? 'success' : 'error');
+        if (data.ok) {
+            const fila = document.getElementById('fila-' + id);
+            if (fila) fila.remove();
+        }
+    })
+    .catch(err => mostrarMensaje('Error de conexión', 'error'));
+}
+</script>
