@@ -29,9 +29,14 @@ define('ADMIN_USER', $env_vars['ADMIN_USER'] ?? 'admin');
 define('ADMIN_PASS', $env_vars['ADMIN_PASS'] ?? 'admin123');
 
 // Google OAuth
-define('GOOGLE_CLIENT_ID', $env_vars['GOOGLE_CLIENT_ID'] ?? '');
-define('GOOGLE_CLIENT_SECRET', $env_vars['GOOGLE_CLIENT_SECRET'] ?? '');
-define('GOOGLE_REDIRECT_URI', $env_vars['GOOGLE_REDIRECT_URI'] ?? 'http://localhost/HYDRON/auth/google_callback.php');
+$is_local = ($_SERVER['SERVER_NAME'] === 'localhost' || ($_SERVER['SERVER_ADDR'] ?? '') === '127.0.0.1');
+
+define('GOOGLE_CLIENT_ID',     '229655611571-q5lbjaqmtg7d8i5i24pbrnh8cla44hm7.apps.googleusercontent.com');
+define('GOOGLE_CLIENT_SECRET', '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');
+define('GOOGLE_REDIRECT_URI',  $is_local
+    ? 'http://localhost/Life-Below/auth/google_callback.php'
+    : 'https://life-bel0w.mx/auth/google_callback.php'
+);
 
 // Crear carpeta uploads si no existe
 if (!file_exists(UPLOADS_DIR)) {

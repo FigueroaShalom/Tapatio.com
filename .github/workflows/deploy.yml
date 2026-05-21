@@ -13,6 +13,10 @@ jobs:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
+      - name: 📝 Create .env file from Secret
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: 🚀 Deploy to IONOS via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
