@@ -13,6 +13,14 @@ jobs:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
 
+      - name: 📝 Crear .env en servidor con credenciales de Google
+        run: |
+          cat > .env << 'EOF'
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI=https://life-bel0w.mx/auth/google_callback.php
+          EOF
+
       - name: 🚀 Deploy to IONOS via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
