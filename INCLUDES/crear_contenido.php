@@ -63,49 +63,42 @@ $publicaciones = $stmtPub->get_result()->fetch_all(MYSQLI_ASSOC);
     </div>
 
     <!-- ══════════════ ARTÍCULO ══════════════ -->
-    <div id="tab-articulo">
+        <div id="tab-articulo">
         <h3 class="mb-4" style="color:var(--text-color) !important;font-weight:800;">Crear Nuevo Artículo</h3>
         <div id="alerta-articulo" class="alert d-none"></div>
 
         <form id="form-crear-contenido">
             <div class="mb-3">
                 <label class="form-label fw-bold">Título</label>
-                <input type="text" name="titulo" class="form-control"
-                       placeholder="Ej: El impacto del microplástico" required>
+                <input type="text" name="titulo" class="form-control" required>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Categoría</label>
-                    <select name="category" class="form-select">
-                        <option value="peces">Peces</option>
-                        <option value="mamiferos">Mamíferos</option>
-                        <option value="moluscos">Moluscos</option>
-                        <option value="crustaceos">Crustáceos</option>
-                        <option value="noticias">Noticias</option>
-                        <option value="conservacion">Conservación</option>
+                    <select name="category" class="form-select" required>
+                        <!-- Aquí debes cargar categorías desde la tabla `categorias` -->
+                        <?php
+                        $cat_result = $conn->query("SELECT nombre FROM categorias WHERE activo = 1 ORDER BY nombre");
+                        while ($cat = $cat_result->fetch_assoc()) {
+                            echo "<option value=\"" . htmlspecialchars($cat['nombre']) . "\">" . htmlspecialchars($cat['nombre']) . "</option>";
+                        }
+                        ?>
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">URL de Imagen (opcional)</label>
-                    <input type="text" name="imagen" id="input-imagen-url" class="form-control"
-                           placeholder="https://ejemplo.com/imagen.jpg"
-                           oninput="previewImagen(this.value)">
-                    <div id="imagen-preview-wrap" style="display:none; margin-top:0.6rem;">
-                        <img id="imagen-preview" src="" alt="Vista previa"
-                             style="width:100%; max-height:120px; object-fit:cover; border-radius:8px;
-                                    border:1.5px solid var(--border);"
-                             onerror="document.getElementById('imagen-preview-wrap').style.display='none'">
-                    </div>
+                    <input type="text" name="imagen" class="form-control" placeholder="https://ejemplo.com/imagen.jpg">
                 </div>
             </div>
             <div class="mb-4">
                 <label class="form-label fw-bold">Contenido</label>
-                <textarea name="contenido" class="form-control" rows="8"
-                          placeholder="Escribe aquí toda la información..." required></textarea>
+                <textarea name="contenido" class="form-control" rows="8" required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary px-4">
-                Publicar Ahora
-            </button>
+
+            <div class="d-flex gap-2">
+                <button type="button" id="btn-guardar-borrador" class="btn btn-secondary">💾 Guardar borrador</button>
+                <button type="button" id="btn-enviar-revision" class="btn btn-primary">📨 Enviar a revisión</button>
+            </div>
         </form>
     </div>
 
@@ -289,19 +282,41 @@ function mostrarAlerta(idAlerta, ok, texto) {
 }
 
 /* ── ENVÍO: Artículo ─────────────────────────────────────── */
-document.getElementById('form-crear-contenido').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const fd = new FormData(this);
-    fd.append('categoria', fd.get('category')); // el PHP espera 'categoria'
-
+// Envío como borrador
+document.getElementById('btn-guardar-borrador').addEventListener('click', function() {
+    const fd = new FormData(document.getElementById('form-crear-contenido'));
+    fd.append('categoria', fd.get('category'));
+    fd.append('estado', 'borrador');
+    fd.append('accion', 'crear_articulo');
+    
     fetch('database/procesar_crear_contenido.php', { method:'POST', body:fd })
     .then(r => r.text())
     .then(data => {
         if (data.trim() === 'success') {
-            mostrarAlerta('alerta-articulo', true, '¡Artículo publicado con éxito!');
-            this.reset();
+            mostrarAlerta('alerta-articulo', true, 'Borrador guardado correctamente.');
+            document.getElementById('form-crear-contenido').reset();
         } else {
-            mostrarAlerta('alerta-articulo', false, 'Error al publicar: ' + data);
+            mostrarAlerta('alerta-articulo', false, 'Error: ' + data);
+        }
+    })
+    .catch(() => mostrarAlerta('alerta-articulo', false, 'Error de conexión.'));
+});
+
+// Envío a revisión
+document.getElementById('btn-enviar-revision').addEventListener('click', function() {
+    const fd = new FormData(document.getElementById('form-crear-contenido'));
+    fd.append('categoria', fd.get('category'));
+    fd.append('estado', 'pendiente');
+    fd.append('accion', 'crear_articulo');
+    
+    fetch('database/procesar_crear_contenido.php', { method:'POST', body:fd })
+    .then(r => r.text())
+    .then(data => {
+        if (data.trim() === 'success') {
+            mostrarAlerta('alerta-articulo', true, 'Artículo enviado a revisión. Recibirás respuesta pronto.');
+            document.getElementById('form-crear-contenido').reset();
+        } else {
+            mostrarAlerta('alerta-articulo', false, 'Error: ' + data);
         }
     })
     .catch(() => mostrarAlerta('alerta-articulo', false, 'Error de conexión.'));

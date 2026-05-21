@@ -21,7 +21,7 @@ header("Pragma: no-cache");
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
-
+    
 define('SITE_NAME', 'HYDRON');
 define('SITE_URL', 'http://localhost/HYDRON/'); // Esto podría ir al .env luego
 define('UPLOADS_DIR', __DIR__ . '/uploads/');

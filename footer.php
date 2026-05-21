@@ -30,8 +30,8 @@
     <div class="hy-footer-inner">
 
         <div class="hy-footer-brand">
-            <p style="font-weight: 800; font-size: 1.5rem;">Life Below</p>
-            <p>Explorando y protegiendo<br>nuestros océanos.</p>
+    <p style="font-weight: 800; font-size: 1.5rem;"><?php echo $config['site_name']; ?></p>
+    <p><?php echo $config['site_description']; ?></p>
             <div class="hy-footer-social">
                 <a href="#" title="Instagram">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
@@ -61,15 +61,7 @@
             <a href="index.php?section=dashboard">Dashboard</a>
         </div>
 
-    
-
     </div>
-
-    <div class="hy-footer-bottom">
-        <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?> — Todos los derechos reservados</p>
-        <p>Hecho con dedicación para los océanos</p>
-    </div>
-</footer>
 
 <script>
 // Hamburger menu

@@ -1,27 +1,42 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-if (!isset($_SESSION['id'])) {
+require_once __DIR__ . '/../database/Conexion_base.php';
+
+if (!isset($_SESSION['user_id'])) {
     die("Debes iniciar sesión para editar.");
 }
 
-// ✅ Ruta corregida
-require_once __DIR__ . '/../database/Conexion_base.php';
-
 $id_post = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-
 if (!$id_post) {
     echo "<div class='alert alert-danger'>No se proporcionó un ID válido.</div>";
     exit;
 }
 
-// Solo el autor puede editar
-$stmt = $conn->prepare("SELECT * FROM publicaciones WHERE id = ? AND id_autor = ?");
-$stmt->bind_param("ii", $id_post, $_SESSION['id']);
+$rol = $_SESSION['rol'] ?? '';
+$user_id = (int)$_SESSION['user_id'];
+
+// Construir consulta según rol
+if ($rol === 'administrador') {
+    // Admin puede editar cualquier artículo
+    $stmt = $conn->prepare("SELECT * FROM publicaciones WHERE id = ?");
+    $stmt->bind_param("i", $id_post);
+} else {
+    // Editores y autores solo pueden editar los suyos
+    $stmt = $conn->prepare("SELECT * FROM publicaciones WHERE id = ? AND id_autor = ?");
+    $stmt->bind_param("ii", $id_post, $user_id);
+}
 $stmt->execute();
 $post = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
 if (!$post) {
-    echo "<div class='alert alert-danger'>No tienes permiso para editar esto o el artículo no existe.</div>";
+    echo "<div class='alert alert-danger'>No tienes permiso para editar este contenido o no existe.</div>";
+    exit;
+}
+
+// No permitir editar si ya está aprobado (excepto admin)
+if ($post['estado'] === 'aprobado' && $rol !== 'administrador') {
+    echo "<div class='alert alert-warning'>No puedes editar un artículo que ya ha sido aprobado.</div>";
     exit;
 }
 
@@ -81,7 +96,7 @@ document.getElementById('form-editar-contenido').addEventListener('submit', func
 
     const formData = new FormData(this);
 
-    fetch('../database/procesar_crear_contenido.php', {
+    fetch('database/procesar_crear_contenido.php', {
         method: 'POST',
         body: formData
     })
