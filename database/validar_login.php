@@ -65,6 +65,7 @@ unset($_SESSION['login_intentos'], $_SESSION['login_bloqueado_hasta']);
 session_regenerate_id(true);
 
 $_SESSION['user_id']   = $usuario['id'];
+$_SESSION['id']        = $usuario['id']; 
 $_SESSION['username']  = $usuario['user'];
 $_SESSION['user_rol']  = $usuario['rol'];
 $_SESSION['logged_in'] = true;
