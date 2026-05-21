@@ -2,7 +2,7 @@
 $current_section = $_GET['section'] ?? 'inicio';
 
 require_once __DIR__ . '/database/Conexion_base.php';
-require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/INCLUDES/functions.php';
 $config = cargar_configuracion();
 ?>
 <!DOCTYPE html>
