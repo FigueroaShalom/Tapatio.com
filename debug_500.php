@@ -1,61 +1,103 @@
 <?php
-// ⚠️ ARCHIVO TEMPORAL DE DIAGNÓSTICO - ELIMINAR DESPUÉS
-// Accede a: https://life-bel0w.mx/debug_500.php
-
+// ⚠️ ARCHIVO TEMPORAL DE DIAGNÓSTICO v2 - ELIMINAR DESPUÉS
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-echo "<h2>🔍 Diagnóstico Life Below</h2>";
-echo "<pre>";
+echo "<h2>🔍 Diagnóstico v2 - Buscando el error exacto</h2><pre>";
 
-// 1. Versión de PHP
-echo "✅ PHP versión: " . PHP_VERSION . "\n\n";
+// Simular lo que hace index.php paso a paso
 
-// 2. ¿Existe el .env?
-$env_path = __DIR__ . '/.env';
-if (file_exists($env_path)) {
-    echo "✅ .env ENCONTRADO\n";
-    $env = parse_ini_file($env_path);
-    echo "   DB_HOST: " . ($env['DB_HOST'] ?? '❌ no definido') . "\n";
-    echo "   DB_USER: " . ($env['DB_USER'] ?? '❌ no definido') . "\n";
-    echo "   DB_PASS: " . (isset($env['DB_PASS']) ? (strlen($env['DB_PASS']) > 0 ? '✅ tiene valor' : '⚠️ está vacío') : '❌ no definido') . "\n";
-    echo "   DB_NAME: " . ($env['DB_NAME'] ?? '❌ no definido') . "\n";
-} else {
-    echo "❌ .env NO ENCONTRADO - Este es probablemente el problema principal\n";
+// PASO 1: config.php
+echo "--- PASO 1: config.php ---\n";
+try {
+    ob_start();
+    require_once __DIR__ . '/config.php';
+    $out = ob_get_clean();
+    echo "✅ config.php cargó OK\n";
+} catch (Throwable $e) {
+    ob_end_clean();
+    echo "❌ config.php FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . "\n";
+    die("</pre><p>🛑 Detenido en config.php</p>");
 }
 
-echo "\n";
-
-// 3. Probar conexión a BD
-echo "--- Prueba de conexión a BD ---\n";
-$env_vars = file_exists($env_path) ? parse_ini_file($env_path) : [];
-$host     = $env_vars['DB_HOST'] ?? 'localhost';
-$usuario  = $env_vars['DB_USER'] ?? 'root';
-$password = $env_vars['DB_PASS'] ?? '';
-$base     = $env_vars['DB_NAME'] ?? 'life_below_blog';
-
-$conn = @new mysqli($host, $usuario, $password, $base);
-if ($conn->connect_error) {
-    echo "❌ Error de BD: " . $conn->connect_error . "\n";
-} else {
-    echo "✅ Conexión a BD exitosa\n";
-    $conn->close();
+// PASO 2: Conexion_base.php
+echo "\n--- PASO 2: database/Conexion_base.php ---\n";
+try {
+    ob_start();
+    require_once __DIR__ . '/database/Conexion_base.php';
+    $out = ob_get_clean();
+    echo "✅ Conexion_base.php cargó OK\n";
+    if (isset($conn)) echo "✅ \$conn disponible\n";
+} catch (Throwable $e) {
+    ob_end_clean();
+    echo "❌ Conexion_base.php FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . "\n";
+    die("</pre><p>🛑 Detenido en Conexion_base.php</p>");
 }
 
-echo "\n";
-
-// 4. ¿Existe INCLUDES/functions.php?
-echo "--- Archivos críticos ---\n";
-$archivos = [
-    'INCLUDES/functions.php',
-    'database/Conexion_base.php',
-    'config.php',
-    '.env',
-];
-foreach ($archivos as $archivo) {
-    $existe = file_exists(__DIR__ . '/' . $archivo);
-    echo ($existe ? "✅" : "❌") . " $archivo\n";
+// PASO 3: INCLUDES/functions.php
+echo "\n--- PASO 3: INCLUDES/functions.php ---\n";
+try {
+    ob_start();
+    require_once __DIR__ . '/INCLUDES/functions.php';
+    $out = ob_get_clean();
+    echo "✅ functions.php cargó OK\n";
+} catch (Throwable $e) {
+    ob_end_clean();
+    echo "❌ functions.php FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . "\n";
+    die("</pre><p>🛑 Detenido en functions.php</p>");
 }
 
+// PASO 4: cargar_configuracion()
+echo "\n--- PASO 4: cargar_configuracion() ---\n";
+try {
+    $config = cargar_configuracion();
+    echo "✅ cargar_configuracion() OK\n";
+    echo "   site_name: " . ($config['site_name'] ?? '❌ no existe') . "\n";
+    echo "   site_description: " . ($config['site_description'] ?? '❌ no existe') . "\n";
+} catch (Throwable $e) {
+    echo "❌ cargar_configuracion() FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . "\n";
+    die("</pre><p>🛑 Detenido en cargar_configuracion()</p>");
+}
+
+// PASO 5: header.php
+echo "\n--- PASO 5: header.php ---\n";
+try {
+    ob_start();
+    $_GET['section'] = 'inicio';
+    include __DIR__ . '/header.php';
+    $out = ob_get_clean();
+    echo "✅ header.php cargó OK (" . strlen($out) . " bytes generados)\n";
+} catch (Throwable $e) {
+    ob_end_clean();
+    echo "❌ header.php FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . " del archivo: " . $e->getFile() . "\n";
+    die("</pre><p>🛑 Detenido en header.php</p>");
+}
+
+// PASO 6: INCLUDES/inicio.php
+echo "\n--- PASO 6: INCLUDES/inicio.php ---\n";
+try {
+    ob_start();
+    include __DIR__ . '/INCLUDES/inicio.php';
+    $out = ob_get_clean();
+    echo "✅ inicio.php cargó OK (" . strlen($out) . " bytes)\n";
+} catch (Throwable $e) {
+    ob_end_clean();
+    echo "❌ inicio.php FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . "\n";
+    die("</pre><p>🛑 Detenido en inicio.php</p>");
+}
+
+// PASO 7: footer.php
+echo "\n--- PASO 7: footer.php ---\n";
+try {
+    ob_start();
+    include __DIR__ . '/footer.php';
+    $out = ob_get_clean();
+    echo "✅ footer.php cargó OK (" . strlen($out) . " bytes)\n";
+} catch (Throwable $e) {
+    ob_end_clean();
+    echo "❌ footer.php FALLÓ: " . $e->getMessage() . " en línea " . $e->getLine() . "\n";
+    die("</pre><p>🛑 Detenido en footer.php</p>");
+}
+
+echo "\n✅✅✅ TODOS LOS PASOS PASARON - El problema puede ser de permisos o .htaccess\n";
 echo "</pre>";
-echo "<p><strong>⚠️ Elimina este archivo del servidor cuando termines de diagnosticar.</strong></p>";
