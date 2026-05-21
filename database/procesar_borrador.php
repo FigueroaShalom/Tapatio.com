@@ -14,12 +14,23 @@ $id = (int)($_POST['id_borrador'] ?? 0);
 $respuesta = ['ok' => false, 'msg' => ''];
 
 if ($accion === 'publicar') {
+    // Si aún quieres conservar publicación directa (opcional)
     $stmt = $conn->prepare("UPDATE publicaciones SET estado='publicado' WHERE id=? AND id_autor=? AND estado='borrador'");
     $stmt->bind_param("ii", $id, $_SESSION['id']);
     if ($stmt->execute()) {
         $respuesta = ['ok' => true, 'msg' => '✅ Borrador publicado.'];
     } else {
         $respuesta['msg'] = '❌ Error al publicar: ' . $conn->error;
+    }
+}
+elseif ($accion === 'revisar') {
+    // Nueva acción: enviar a revisión (estado pendiente)
+    $stmt = $conn->prepare("UPDATE publicaciones SET estado='pendiente' WHERE id=? AND id_autor=? AND estado='borrador'");
+    $stmt->bind_param("ii", $id, $_SESSION['id']);
+    if ($stmt->execute()) {
+        $respuesta = ['ok' => true, 'msg' => '✅ Borrador enviado a revisión.'];
+    } else {
+        $respuesta['msg'] = '❌ Error al enviar a revisión: ' . $conn->error;
     }
 }
 elseif ($accion === 'eliminar') {

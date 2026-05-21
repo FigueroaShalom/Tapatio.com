@@ -91,7 +91,7 @@ $cats = ['peces', 'mamiferos', 'moluscos', 'crustaceos', 'conservacion'];
                     </div>
                     <div class="post-actions">
                         <button onclick="cargar('mis_borradores?editar_borrador=<?php echo $b['id']; ?>')" class="btn-small">Editar</button>
-                        <button onclick="ejecutarAccion(<?php echo $b['id']; ?>, 'publicar')" class="btn-small" style="background:#27ae60;color:white;">Publicar</button>
+                        <button onclick="ejecutarAccion(<?php echo $b['id']; ?>, 'revisar')" class="btn-small" style="background:#ffc107;color:#000;">Enviar a revisión</button>
                         <button onclick="ejecutarAccion(<?php echo $b['id']; ?>, 'eliminar')" class="btn-small danger">Eliminar</button>
                     </div>
                 </div>
