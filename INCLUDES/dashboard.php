@@ -142,6 +142,13 @@ $_SESSION['id'] = $id_user;
     box-shadow: var(--shadow);
     border: 1.5px solid var(--border) !important;
 }
+.btn-revision {
+    background: #ff9800 !important;
+    color: white !important;
+}
+.btn-revision:hover {
+    background: #e68900 !important;
+}
 
 </style>
 
@@ -165,18 +172,20 @@ $_SESSION['id'] = $id_user;
 <button onclick="cargar('crear_contenido')">Crear Contenido</button>
 <button onclick="cargar('mis_Publicaciones')">Mis Publicaciones</button>
 <button onclick="cargar('mis_borradores')">Mis Borradores</button>
-<button class="admin" onclick="cargar('aprobar_fotos')">Aprobar Fotos</button>
-<button class="admin" onclick="cargar('Perfil(dashboard)/administrar_Usuarios')">Administrar usuarios</button>
-<button class="admin" onclick="cargar('Perfil(dashboard)/crear_Usuarios')">Crear Usuario</button>
-<button class="admin" onclick="cargar('admin_categorias')">Gestionar Categorías</button>
+<button onclick="cargar('publicaciones_Revision')" class="btn-revision">En revisión</button>
 <button class="admin" onclick="cargar('admin_configuracion')">Configuración general</button>
+<button class="admin" onclick="cargar('aprobar_fotos')">Aprobar Fotos</button>
+<button class="admin" onclick="cargar('Perfil(dashboard)/crear_Usuarios')">Crear Usuario</button>
+<button class="admin" onclick="cargar('Perfil(dashboard)/administrar_Usuarios')">Administrar usuarios</button>
+<button class="admin" onclick="cargar('admin_categorias')">Gestionar Categorías</button>    
 <button class="admin" onclick="cargar('admin_contenidos')">Administrar Contenidos</button>
 <button class="admin" onclick="cargar('admin_comentarios')">Moderar comentarios</button>
 <?php } elseif($rol == "editor"){ ?>
 <button onclick="cargar('crear_contenido')">Crear Contenido</button>
 <button onclick="cargar('mis_Publicaciones')">Mis Publicaciones</button>
 <button onclick="cargar('mis_borradores')">Mis Borradores</button>
-<button onclick="cargar('publicaciones_Revision')">En revisión</button>
+<button onclick="cargar('publicaciones_Revision')" class="btn-revision">En revisión</button>
+<button class="admin" onclick="cargar('aprobar_fotos')">Aprobar Fotos</button>
 
 <?php } elseif($rol == "autor"){ ?>
 <button onclick="cargar('crear_contenido')">Crear Contenido</button>

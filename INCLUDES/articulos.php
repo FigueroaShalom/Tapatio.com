@@ -599,12 +599,13 @@ else:
     }
 
     $sql = "
-        SELECT p.id, p.titulo, p.contenido, p.categoria, p.imagen, p.fecha_creacion,
-               u.user AS autor,
-               (SELECT COUNT(*) FROM likes WHERE id_publicacion = p.id) AS total_likes
-        FROM publicaciones p
-        JOIN usuarios u ON p.id_autor = u.id
-    ";
+    SELECT p.id, p.titulo, p.contenido, p.categoria, p.imagen, p.fecha_creacion,
+           u.user AS autor,
+           (SELECT COUNT(*) FROM likes WHERE id_publicacion = p.id) AS total_likes
+    FROM publicaciones p
+    JOIN usuarios u ON p.id_autor = u.id
+    WHERE p.estado = 'aprobado'
+";
     if (!empty($where)) {
         $sql .= ' WHERE ' . implode(' AND ', $where);
     }

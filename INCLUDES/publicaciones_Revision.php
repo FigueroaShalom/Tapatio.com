@@ -1,55 +1,14 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-// Solo editores y administradores pueden acceder
-if (!isset($_SESSION['rol']) || ($_SESSION['rol'] !== 'editor' && $_SESSION['rol'] !== 'administrador')) {
+if (!isset($_SESSION['rol']) || !in_array($_SESSION['rol'], ['editor', 'administrador'])) {
     echo "<div class='alert alert-danger'>Acceso no autorizado</div>";
     exit;
 }
 require_once __DIR__ . '/../database/Conexion_base.php';
 
-$mensaje = '';
-$error = '';
-
-// Procesar acciones (aprobar/rechazar/editar)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion_revision'])) {
-    $id_publicacion = (int)$_POST['id_publicacion'];
-    $accion = $_POST['accion_revision'];
-    $observacion = trim($_POST['observacion'] ?? '');
-
-    if ($accion === 'aprobar') {
-        $stmt = $conn->prepare("UPDATE publicaciones SET estado = 'aprobado' WHERE id = ?");
-        $stmt->bind_param("i", $id_publicacion);
-        if ($stmt->execute()) {
-            $mensaje = "✅ Artículo aprobado y publicado.";
-        } else {
-            $error = "❌ Error al aprobar: " . $conn->error;
-        }
-        $stmt->close();
-    } 
-    elseif ($accion === 'rechazar') {
-        // Guardar observación (usaremos un campo `observacion_revision` si existe, o creamos uno)
-        // Por simplicidad, puedes agregar una columna `observacion` en publicaciones.
-        // Si no existe, ejecuta: ALTER TABLE publicaciones ADD COLUMN observacion TEXT DEFAULT NULL;
-        $stmt = $conn->prepare("UPDATE publicaciones SET estado = 'rechazado', observacion = ? WHERE id = ?");
-        $stmt->bind_param("si", $observacion, $id_publicacion);
-        if ($stmt->execute()) {
-            $mensaje = "❌ Artículo rechazado. Se ha enviado una observación al autor.";
-        } else {
-            $error = "❌ Error al rechazar: " . $conn->error;
-        }
-        $stmt->close();
-    }
-    elseif ($accion === 'editar') {
-        // Redirigir a la página de edición
-        header("Location: index.php?section=dashboard&modulo=editar_contenido&id=$id_publicacion");
-        exit;
-    }
-}
-
-// Obtener contenidos pendientes (solo artículos por ahora, luego también videos)
+// Obtener contenidos pendientes (solo artículos)
 $query = "
-    SELECT p.id, p.titulo, p.contenido, p.categoria, p.fecha_creacion, u.user AS autor, 
-           p.estado, p.observacion
+    SELECT p.id, p.titulo, p.contenido, p.categoria, p.fecha_creacion, u.user AS autor, p.estado, p.observacion
     FROM publicaciones p
     JOIN usuarios u ON p.id_autor = u.id
     WHERE p.estado = 'pendiente'
@@ -59,97 +18,119 @@ $result = $conn->query($query);
 $pendientes = $result->fetch_all(MYSQLI_ASSOC);
 ?>
 
-<div class="revision-container">
-    <h3 class="fw-bold mb-4">📝 Contenidos pendientes de revisión</h3>
-    
-    <?php if ($mensaje): ?>
-        <div class="alert alert-success"><?php echo htmlspecialchars($mensaje); ?></div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
+<style>
+.revision-table { width: 100%; border-collapse: collapse; }
+.revision-table th, .revision-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.revision-table th { background: var(--ocean); color: #fff; }
+.btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.btn-sm { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: none; cursor: pointer; }
+.btn-success { background: #28a745; color: #fff; }
+.btn-danger { background: #dc3545; color: #fff; }
+.btn-warning { background: #ffc107; color: #000; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background: var(--card-bg); padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px; }
+</style>
 
-    <?php if (empty($pendientes)): ?>
-        <div class="alert alert-info">No hay contenidos pendientes de revisión.</div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Autor</th>
-                        <th>Categoría</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($pendientes as $item): ?>
-                    <tr>
-                        <td><?php echo $item['id']; ?></td>
-                        <td><?php echo htmlspecialchars($item['titulo']); ?></td>
-                        <td><?php echo htmlspecialchars($item['autor']); ?></td>
-                        <td><?php echo htmlspecialchars($item['categoria']); ?></td>
-                        <td><?php echo date('d/m/Y H:i', strtotime($item['fecha_creacion'])); ?></td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <form method="POST" style="display: inline-block;">
-                                    <input type="hidden" name="id_publicacion" value="<?php echo $item['id']; ?>">
-                                    <input type="hidden" name="accion_revision" value="aprobar">
-                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('¿Aprobar este contenido?')">✅ Aprobar</button>
-                                </form>
-                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rechazarModal" data-id="<?php echo $item['id']; ?>" data-titulo="<?php echo htmlspecialchars($item['titulo']); ?>">❌ Rechazar</button>
-                                <form method="POST" style="display: inline-block;">
-                                    <input type="hidden" name="id_publicacion" value="<?php echo $item['id']; ?>">
-                                    <input type="hidden" name="accion_revision" value="editar">
-                                    <button type="submit" class="btn btn-sm btn-warning">✏️ Editar</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
-</div>
+<h3 class="fw-bold mb-4">📝 Contenidos pendientes de revisión</h3>
+<div id="mensajesRevision"></div>
 
-<!-- Modal para rechazar con observación -->
-<div class="modal fade" id="rechazarModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<?php if (empty($pendientes)): ?>
+    <div class="alert alert-info">No hay contenidos pendientes de revisión.</div>
+<?php else: ?>
+    <table class="revision-table">
+        <thead>
+            <tr><th>ID</th><th>Título</th><th>Autor</th><th>Categoría</th><th>Fecha</th><th>Acciones</th></tr>
+        </thead>
+        <tbody>
+            <?php foreach ($pendientes as $item): ?>
+            <tr id="fila-<?php echo $item['id']; ?>">
+                <td><?php echo $item['id']; ?></td>
+                <td><?php echo htmlspecialchars($item['titulo']); ?></td>
+                <td><?php echo htmlspecialchars($item['autor']); ?></td>
+                <td><?php echo htmlspecialchars($item['categoria']); ?></td>
+                <td><?php echo date('d/m/Y H:i', strtotime($item['fecha_creacion'])); ?></td>
+                <td class="btn-group">
+                    <button class="btn-sm btn-success" onclick="revisarAccion(<?php echo $item['id']; ?>, 'aprobar')">Aprobar</button>
+                    <button class="btn-sm btn-danger" onclick="abrirModalRechazo(<?php echo $item['id']; ?>)">Rechazar</button>
+                    <a href="index.php?section=articulos&post=<?php echo $item['id']; ?>" target="_blank" class="btn-sm btn-warning" style="text-decoration:none; display:inline-block;">Ver</a>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <!-- Modal para rechazar -->
+    <div id="modalRechazo" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Rechazar contenido</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h4>Rechazar artículo</h4>
+            <textarea id="observacion" placeholder="Motivo del rechazo (visible para el autor)" rows="3" style="width:100%; margin: 1rem 0;"></textarea>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="btn-sm" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn-sm btn-danger" id="btnConfirmarRechazo">Rechazar</button>
             </div>
-            <form method="POST">
-                <input type="hidden" name="id_publicacion" id="rechazar_id" value="">
-                <input type="hidden" name="accion_revision" value="rechazar">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Motivo del rechazo (visible para el autor)</label>
-                        <textarea name="observacion" class="form-control" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Rechazar</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
+<?php endif; ?>
 
 <script>
-    // Pasar el id al modal
-    var rechazarModal = document.getElementById('rechazarModal');
-    if (rechazarModal) {
-        rechazarModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget;
-            var id = button.getAttribute('data-id');
-            var inputId = rechazarModal.querySelector('#rechazar_id');
-            inputId.value = id;
-        });
+function mostrarMensaje(msg, tipo) {
+    const contenedor = document.getElementById('mensajesRevision');
+    contenedor.innerHTML = `<div class="alert alert-${tipo === 'success' ? 'success' : 'error'}">${msg}</div>`;
+    setTimeout(() => contenedor.innerHTML = '', 3000);
+}
+
+let articuloIdRechazo = null;
+
+function abrirModalRechazo(id) {
+    articuloIdRechazo = id;
+    document.getElementById('modalRechazo').style.display = 'flex';
+}
+
+function cerrarModal() {
+    document.getElementById('modalRechazo').style.display = 'none';
+    articuloIdRechazo = null;
+}
+
+function revisarAccion(id, accion) {
+    if (accion === 'aprobar' && !confirm('¿Aprobar este artículo?')) return;
+    if (accion === 'rechazar') {
+        const observacion = document.getElementById('observacion').value.trim();
+        if (!observacion) {
+            mostrarMensaje('Debes escribir un motivo de rechazo.', 'error');
+            return;
+        }
+        var formData = new FormData();
+        formData.append('id_publicacion', id);
+        formData.append('accion', 'rechazar');
+        formData.append('observacion', observacion);
+        enviarPeticion(formData);
+        cerrarModal();
+        return;
     }
+    // Aprobar
+    var formData = new FormData();
+    formData.append('id_publicacion', id);
+    formData.append('accion', 'aprobar');
+    enviarPeticion(formData);
+}
+
+function enviarPeticion(formData) {
+    fetch('database/procesar_revision.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        mostrarMensaje(data.msg, data.ok ? 'success' : 'error');
+        if (data.ok) {
+            cargar('publicaciones_Revision'); // recarga la lista
+        }
+    })
+    .catch(err => console.error(err));
+}
+
+// Asignar evento al botón confirmar rechazo
+document.getElementById('btnConfirmarRechazo')?.addEventListener('click', function() {
+    if (articuloIdRechazo) revisarAccion(articuloIdRechazo, 'rechazar');
+});
 </script>

@@ -6,6 +6,7 @@ $current_section = $_GET['section'] ?? 'inicio';
     <!-- Particles.js para fondo dinámico -->
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITE_NAME; ?> - <?php echo ucfirst(str_replace('_', ' ', $current_section)); ?></title>
