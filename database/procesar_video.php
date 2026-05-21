@@ -11,7 +11,7 @@ function responder(bool $ok, string $mensaje): void {
     echo json_encode(['ok' => $ok, 'mensaje' => $mensaje]);
     exit;
 }
-
+    
 // ── Verificar sesión ──────────────────────────────────────────────────────────
 if (!isset($_SESSION['id'])) {
     responder(false, 'Sesión no válida. Inicia sesión nuevamente.');

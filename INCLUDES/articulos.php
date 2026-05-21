@@ -604,12 +604,11 @@ else:
            (SELECT COUNT(*) FROM likes WHERE id_publicacion = p.id) AS total_likes
     FROM publicaciones p
     JOIN usuarios u ON p.id_autor = u.id
-    WHERE p.estado = 'aprobado'
 ";
-    if (!empty($where)) {
-        $sql .= ' WHERE ' . implode(' AND ', $where);
-    }
-    $sql .= " ORDER BY p.fecha_creacion DESC";
+if (!empty($where)) {
+    $sql .= ' WHERE ' . implode(' AND ', $where);
+}
+$sql .= " ORDER BY p.fecha_creacion DESC";
 
     $posts = $conn->query($sql)->fetch_all(MYSQLI_ASSOC);
 
