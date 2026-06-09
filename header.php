@@ -7,8 +7,7 @@ $config = cargar_configuracion();
 ?>
 <!DOCTYPE html>
 <html lang="es">
-    <!-- Particles.js para fondo dinámico -->
-<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 <head>
             
     <meta charset="UTF-8">
@@ -27,11 +26,9 @@ $config = cargar_configuracion();
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="icon" type="image/jpeg" href="uploads/logooo.jpg">
     
-    <!-- Theme script to prevent flash -->
     <script>
         (function() {
-            const isLoggedIn = <?php echo !empty($_SESSION['logged_in']) ? 'true' : 'false'; ?>;
-            const savedTheme = isLoggedIn ? (localStorage.getItem('theme') || 'dark') : 'dark';
+            const savedTheme = localStorage.getItem('theme') || 'light';
             
             if (savedTheme === 'dark') {
                 document.documentElement.classList.add('dark-mode');
@@ -117,6 +114,67 @@ $config = cargar_configuracion();
         }
         .hy-hamburger span {
             background: var(--header-text) !important; 
+        }
+
+       
+
+        /* 1. SOLUCIÓN PARA BOTONES (Forzar texto blanco en botones rellenos) */
+        .hy-btn-solid, 
+        [class*="btn-solid"], 
+        .hy-main a[class*="btn"]:not(.hy-btn-outline),
+        .hy-main button[class*="btn"] {
+            color: #ffffff !important;
+        }
+
+        /* 2. SOLUCIÓN PARA EL BANNER/SLIDER SUPERIOR (Texto blanco siempre sobre la imagen oscura) */
+        [class*="slider"] h1, [class*="slider"] h2, [class*="slider"] h3, [class*="slider"] p,
+        [class*="carousel"] h1, [class*="carousel"] h2, [class*="carousel"] h3, [class*="carousel"] p,
+        .carousel-caption h2, .carousel-caption p {
+            color: #ffffff !important;
+        }
+        
+        /* Clase de auxilio por si acaso tu slider usa clases personalizadas */
+        .forzar-blanco {
+            color: #ffffff !important;
+        }
+
+        /* 3. SOLUCIÓN PARA EL LOGIN (Letra oscura sobre inputs blancos) */
+        form input[type="text"], 
+        form input[type="password"], 
+        form input[type="email"], 
+        .form-control,
+        [class*="login"] input {
+            color: #0f172a !important; /* Color pizarra oscuro para que sea totalmente legible */
+            font-weight: 600 !important;
+        }
+        /* Color del texto de guía (Placeholder) dentro de los inputs del login */
+        form input::placeholder, 
+        .form-control::placeholder,
+        [class*="login"] input::placeholder {
+            color: #64748b !important;
+        }
+
+                html:not(.dark-mode) body {
+            background-color: #f3f7fa !important;
+            color: #112233 !important;
+        }
+        html:not(.dark-mode) h1, html:not(.dark-mode) h2, html:not(.dark-mode) h3, html:not(.dark-mode) .hy-main h2 {
+            color: #0b1e33 !important;
+        }
+        html:not(.dark-mode) p, html:not(.dark-mode) .hy-main p {
+            color: #4b617a !important;
+        }
+        html:not(.dark-mode) .hy-main a:not(.hy-btn-solid):not(.hy-nav-link), 
+        html:not(.dark-mode) form a {
+            color: #0077be !important;
+        }
+
+        html.dark-mode body {
+            background-color: #071624 !important;
+            color: #ffffff !important;
+        }
+        html.dark-mode h1, html.dark-mode h2, html.dark-mode h3, html.dark-mode p {
+            color: #ffffff !important;
         }
     </style>
 </head>
@@ -213,7 +271,6 @@ $config = cargar_configuracion();
         });
     }
 
-    // Reset theme to dark on logout
     document.querySelectorAll('a[href*="logout"]').forEach(link => {
         link.addEventListener('click', () => {
             localStorage.removeItem('theme');

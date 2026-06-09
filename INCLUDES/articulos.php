@@ -512,11 +512,11 @@ if ($selected_id):
             <h2 class="hy-post-title-detail"><?php echo htmlspecialchars($post['titulo']); ?></h2>
 
             <div class="hy-article-meta-detail">
-                <span>👤 <?php echo htmlspecialchars($post['autor']); ?></span>
-                <span>📅 <?php echo date('d/m/Y', strtotime($post['fecha_creacion'])); ?></span>
-                <span>🏷️ <?php echo htmlspecialchars($post['categoria']); ?></span>
-                <span>❤️ <?php echo $post['total_likes']; ?> likes</span>
-                <span>💬 <?php echo $post['total_comentarios']; ?> comentarios</span>
+                <span> <?php echo htmlspecialchars($post['autor']); ?></span>
+                <span><?php echo date('d/m/Y', strtotime($post['fecha_creacion'])); ?></span>
+                <span> <?php echo htmlspecialchars($post['categoria']); ?></span>
+                <span> <?php echo $post['total_likes']; ?> likes</span>
+                <span> <?php echo $post['total_comentarios']; ?> comentarios</span>
             </div>
 
             <div class="hy-article-content-detail" id="article-content">

@@ -22,33 +22,44 @@ if (file_exists($cache_file) && (time() - filemtime($cache_file)) < CACHE_TTL_HO
 
 // Crear directorio de caché si no existe
 if (!file_exists($cache_dir)) {
-    mkdir($cache_dir, 0777, true);
+    @mkdir($cache_dir, 0777, true);
 }
 
-$query = 'vida submarina OR oceanos OR conservacion marina OR especies marinas OR arrecife coral';
+// Agrupamos las palabras en comillas para búsquedas exactas (funciona mejor en GNews)
+$query = '"vida submarina" OR "océano" OR "conservación marina" OR "especies marinas" OR "arrecife"';
 
+// Usamos formato de fecha ISO 8601 y máximo 30 días (límite del plan free)
 $url = 'https://gnews.io/api/v4/search?' . http_build_query([
     'q'      => $query,
     'lang'   => 'es',
     'in'     => 'title,description',
     'sortby' => 'publishedAt',
     'max'    => 5,
-    'from'   => date('Y-m-d', strtotime('-60 days')),
+    'from'   => date('Y-m-d\T00:00:00\Z', strtotime('-30 days')),
     'apikey' => GNEWS_API_KEY,
 ]);
 
+// Añadimos ignore_errors para atrapar la respuesta aunque sea código 400/403
 $ctx = stream_context_create(['http' => [
-    'timeout' => 12,
-    'header'  => 'User-Agent: HYDRON/1.0',
+    'timeout'       => 12,
+    'header'        => 'User-Agent: HYDRON/1.0',
+    'ignore_errors' => true 
 ]]);
 
 $response = @file_get_contents($url, false, $ctx);
+$datos = json_decode($response, true);
 
-if (!$response) {
-    echo json_encode(['articles' => [], 'error' => true, 'message' => 'No se pudo conectar con la API de noticias.']);
+// Verificamos si hubo un fallo de conexión o si la API devolvió un mensaje de error
+if (!$response || isset($datos['errors'])) {
+    // Retornamos el error sin guardarlo en caché para que intente de nuevo luego
+    echo json_encode([
+        'articles' => [], 
+        'error' => true, 
+        'message' => 'Fallo en la API: ' . ($datos['errors'][0] ?? 'No hay conexión')
+    ]);
     exit;
 }
 
-// Guardar en caché y retornar
+// Si trae noticias y no hay errores, se guarda en caché y se muestra
 file_put_contents($cache_file, $response);
 echo $response;
